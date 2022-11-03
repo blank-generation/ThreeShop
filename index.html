@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <canvas id="c"></canvas>
+
+    <img id="blanc-logo" src="https://cdn.shopify.com/s/files/1/0584/4005/6970/files/logo.png" />
+    <div class="cont">
+
+        <div class="rightCont">
+            <div class="tmenu">
+
+                <button data-model="4" class="active tItem" onclick="setTee(this)">Round Neck T-shirt </button>
+                <button data-model="5" class="tItem" onclick="setTee(this)">Polo T-shirt</button>
+                <button data-model="6" class="tItem" onclick="setTee(this)">Shorts</button>
+                <button data-model="0" class="tItem" onclick="setTee(this)">Joggers</button>
+
+
+            </div>
+
+  
+
+            <div class="colors">
+
+                <div class="color" id="c1" style="background-color: #6e7154" onclick="setColor(this)"></div>
+                <div class="color" id="c2" style="background-color: #cc7357" onclick="setColor(this)"></div>
+                <div class="color" id="c3" style="background-color: #29282d" onclick="setColor(this)"></div>
+                <div class="color" id="c4" style="background-color: #afb1b4" onclick="setColor(this)"></div>
+                <div class="color" id="c5" style="background-color: #f6ecd1" onclick="setColor(this)"></div>
+                <div class="color" id="c6" style="background-color: #c77f71" onclick="setColor(this)"></div>
+            </div>
+        </div>
+
+
+
+    </div>
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+        }
+
+        #c {
+            width: 100%;
+            height: 100%;
+            display: block;
+            /* z-index: 9999; */
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.min.js"></script>
+
+
+    <script type="module">
+
+        const scene = new THREE.Scene();
+        const loader = new THREE.GLTFLoader();
+        const ModelParent = new THREE.Group();
+        // scene.background = new THREE.Color("white");
+        'use strict';
+
+        let clothCol = new THREE.Color('white');
+        let models = [];
+        function setColor(el) {
+            let tr, tg, tb;
+            let hx;
+            // console.log(el.style['background-color'].toString().slice(4).replace(")", "").split(",")[0])
+            tr = el.style['background-color'].toString().slice(4).replace(")", "").split(",")[0];
+            tg = el.style['background-color'].toString().slice(4).replace(")", "").split(",")[1];
+            tb = el.style['background-color'].toString().slice(4).replace(")", "").split(",")[2];
+            hx = el.style['background-color'];
+            clothCol = new THREE.Color(hx);
+
+        }
+        const tmenus = document.getElementsByClassName('tItem');
+
+        function setTee(el) {
+
+            let mid = el.getAttribute('data-model');
+            for (let i = 0; i < tmenus.length; i++) {
+                tmenus[i].classList.remove("active");
+            }
+            el.classList.add("active");
+            for (let i = ModelParent.children.length - 1; i >= 0; i--) {
+                ModelParent.remove(ModelParent.children[i]);
+            }
+            ModelParent.add(models[mid]);
+        }
+
+        window.setColor = setColor;
+        window.setTee = setTee;
+
+        function main() {
+            const canvas = document.querySelector('#c');
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+
+            const fov = 75;
+            const aspect = 2;  // the canvas default
+            const near = 0.1;
+            const far = 5;
+            const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.position.z = 1.3;
+            camera.position.y = 0.1;
+            const scene = new THREE.Scene();
+            const color = 0xFFFFFF;
+            const intensity = 1;
+            const light = new THREE.DirectionalLight(color, intensity);
+            light.position.set(-1, 2, 4);
+            scene.add(light);
+
+
+
+            // let joggers;
+
+            scene.add(ModelParent);
+
+            //          -------------------- Loading the model-------------------------------
+
+            loader.load('./assets/all.glb', function (gltf) {
+                // joggers = gltf.scene.children[0];
+                gltf.scene.children.forEach((model, i) => {
+                    models.push(model);
+                    models[i].position.x = 0;
+                    models[i].position.y = 0;
+                });
+               
+                // console.log(gltf.scene.getObjectByName('joggers'));
+                console.log(models);
+               
+                models[0] = gltf.scene.getObjectByName('joggers');
+                models[4] = gltf.scene.getObjectByName('mtshirt');
+                models[5] = gltf.scene.getObjectByName('mpolo');
+                models[6] = gltf.scene.getObjectByName('mshorts');
+               
+                ModelParent.add(models[4])
+
+                render();
+
+            });
+
+
+
+            function render(time) {
+                time *= 0.001;
+
+                if (resizeRendererToDisplaySize(renderer)) {
+                    const canvas = renderer.domElement;
+                    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                    camera.updateProjectionMatrix();
+                }
+
+                // cubes.forEach((cube, ndx) => {
+                //     const speed = 1 + ndx * .1;
+                //     const rot = time * speed;
+                //     cube.rotation.x = rot;
+                //     cube.rotation.y = rot;
+                // });
+
+                if (ModelParent) {
+                    ModelParent.rotation.y += 0.01;
+                    ModelParent.children[0].children[0].material.color = clothCol;
+                    // joggers.children[0].children[0].material.color = jcol;
+                }
+
+
+                function resizeRendererToDisplaySize(renderer) {
+                    const canvas = renderer.domElement;
+                    const pixelRatio = window.devicePixelRatio;
+                    const width = canvas.clientWidth * pixelRatio | 0;
+                    const height = canvas.clientHeight * pixelRatio | 0;
+                    const needResize = canvas.width !== width || canvas.height !== height;
+                    if (needResize) {
+                        renderer.setSize(width, height, false);
+                    }
+                    return needResize;
+                }
+                renderer.render(scene, camera);
+
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+
+        main();
+
+    </script>
+</body>
+
+</html>
