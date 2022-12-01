@@ -5,56 +5,83 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title> Blanc 3D Shop</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="bg.css">
 </head>
 
 <body>
     <canvas id="c"></canvas>
-
-    <img id="blanc-logo" src="https://cdn.shopify.com/s/files/1/0584/4005/6970/files/logo.png" />
-    <div class="cont">
-
-        <div class="rightCont">
-            <div class="tmenu">
-
-                <button data-model="4" class="active tItem" onclick="setTee(this)">Round Neck T-shirt </button>
-                <button data-model="5" class="tItem" onclick="setTee(this)">Polo T-shirt</button>
-                <button data-model="6" class="tItem" onclick="setTee(this)">Shorts</button>
-                <button data-model="0" class="tItem" onclick="setTee(this)">Joggers</button>
-
-
-            </div>
-
-  
-
-            <div class="colors">
-
-                <div class="color" id="c1" style="background-color: #6e7154" onclick="setColor(this)"></div>
-                <div class="color" id="c2" style="background-color: #cc7357" onclick="setColor(this)"></div>
-                <div class="color" id="c3" style="background-color: #29282d" onclick="setColor(this)"></div>
-                <div class="color" id="c4" style="background-color: #afb1b4" onclick="setColor(this)"></div>
-                <div class="color" id="c5" style="background-color: #f6ecd1" onclick="setColor(this)"></div>
-                <div class="color" id="c6" style="background-color: #c77f71" onclick="setColor(this)"></div>
-            </div>
-        </div>
-
-
-
+    <div class='wrap'>
+        <div class='top-plane'></div>
+        <div class='bottom-plane'></div>
     </div>
-    <style>
-        html,
-        body {
-            margin: 0;
-            height: 100%;
-        }
+    <!-- <div id="colorBand"></div> -->
+    <img id="blanc-logo" src="https://cdn.shopify.com/s/files/1/0584/4005/6970/files/logo.png" />
 
-        #c {
-            width: 100%;
-            height: 100%;
-            display: block;
-            /* z-index: 9999; */
-        }
+    <div id="arrows">
+        <button onclick="cycleModel(-1)" id="right-arrow"><img
+                src="https://cdn.shopify.com/s/files/1/0584/4005/6970/files/ir.png" alt=""></button>
+        <button onclick="cycleModel(1)" id="left-arrow"><img
+                src="https://cdn.shopify.com/s/files/1/0584/4005/6970/files/ir.png" alt=""></button>
+    </div>
+
+    <div class="tBtn" >
+        <a id="gtprod" href="https://blanc.earth/products/basil-mens-t-shirt">
+            <button> Go to Product</button>
+        </a>
+    </div>
+
+    <div class="radio_container">
+        <input type="radio" name="radio" id="men" checked>
+        <label for="men" onclick="changeType(0)">Men</label>
+        <input type="radio" name="radio" id="women">
+        <label for="women" onclick="changeType(1)">Women</label>
+    </div>
+
+    <div class="colors">
+        <div class="color activeCol" data-color-name="Basil" id="c1" style="background-color: #6e7154"
+            onclick="setColor(this)"></div>
+        <div class="color" data-color-name="Bellini" id="c2" style="background-color: #cc7457" onclick="setColor(this)">
+        </div>
+        <div class="color" data-color-name="Cinder" id="c3" style="background-color: #29282d" onclick="setColor(this)">
+        </div>
+        <div class="color" data-color-name="Haze" id="c4" style="background-color: #afb1b4" onclick="setColor(this)">
+        </div>
+        <div class="color" data-color-name="Willow" id="c5" style="background-color: #f6ecd1" onclick="setColor(this)">
+        </div>
+        <div class="color" data-color-name="Noah" id="c6" style="background-color: #a76e7a" onclick="setColor(this)">
+        </div>
+    </div>
+
+    <div id="productName">
+        <h3 id="productNameH3"> <span id="dyGender">Men's </span> <span id="dyColor">Basil </span> <span id="dyName"> T-Shirt </span> </h3>
+    </div>
+
+    <div class="preloader-1" id="modelLoad">
+        <div>Loading</div>
+        <span class="line line-1"></span>
+        <span class="line line-2"></span>
+        <span class="line line-3"></span>
+        <span class="line line-4"></span>
+        <span class="line line-5"></span>
+        <span class="line line-6"></span>
+        <span class="line line-7"></span>
+        <span class="line line-8"></span>
+        <span class="line line-9"></span>
+    </div>
+
+    <div id="closeButton">
+        <button type="button" class="btn-close" onclick="history.back()">
+            <span class="icon-cross"></span>
+            <span class="visually-hidden">Close</span>
+          </button>
+          
+    </div>
+
+
+    <style>
+
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
@@ -63,86 +90,231 @@
 
     <script type="module">
 
+        const modelMap = ["Joggers", "T-Shirt", "Polo Shirt", "Shorts"];
+        const linkMap = { "Men's Basil T-Shirt": "" }
         const scene = new THREE.Scene();
-        const loader = new THREE.GLTFLoader();
         const ModelParent = new THREE.Group();
-        // scene.background = new THREE.Color("white");
+        const manager = new THREE.LoadingManager();
+        // const url = 'https://blank-generation.github.io/blanc-3d-shop/assets/all.glb';
+        const modelLoad = document.getElementById('modelLoad');
+        manager.onStart = function (url) {
+
+            console.log('Started loading file: ' + url + '.\nLoaded ' + ' files.');
+
+        };
+
+        manager.onProgress = function (url, loaded, total) {
+
+            // console.log('Loading file: ' + url + '.\loaded '  + ' of ' + total + ' files.');
+            // modelLoad.value = (loaded/total) * 100;
+
+        };
+        manager.onLoad = function () {
+
+            console.log('Loading complete!');
+            modelLoad.style.display = 'none'
+
+        };
+
+        const loader = new THREE.GLTFLoader(manager);
+
+        const wLabel = new THREE.Color('#ffffff');
+        const bLabel = new THREE.Color('#000000');
+
+        let targetX = 0;
+        let modelID = 1;
+        let currmodel = 1;
+        let selectedType = 0;
+        let transitionExit = false;
         'use strict';
 
-        let clothCol = new THREE.Color('white');
+        let clothCol = new THREE.Color('#6e7154');
         let models = [];
+        let mMods = [];
+        let wMods = [];
+
+        const tmenus = document.getElementsByClassName('tItem');
+        const dyName = document.getElementById('dyName');
+        const dyColor = document.getElementById('dyColor');
+        const dyGender = document.getElementById('dyGender');
+        const pBtn = document.getElementById('gtprod');
+        const pName = document.getElementById('productNameH3');
+
         function setColor(el) {
-            let tr, tg, tb;
-            let hx;
-            // console.log(el.style['background-color'].toString().slice(4).replace(")", "").split(",")[0])
-            tr = el.style['background-color'].toString().slice(4).replace(")", "").split(",")[0];
-            tg = el.style['background-color'].toString().slice(4).replace(")", "").split(",")[1];
-            tb = el.style['background-color'].toString().slice(4).replace(")", "").split(",")[2];
-            hx = el.style['background-color'];
+            let hx = el.style['background-color'];
+            let activeCol = document.querySelector('.activeCol');
+            if (activeCol != el) {
+                let oldel = activeCol;
+                el.classList.add("activeCol");
+                oldel.classList.remove("activeCol");
+
+            }
             clothCol = new THREE.Color(hx);
+            // console.log(el.getAttribute("data-color-name"));
+            dyColor.innerText = el.getAttribute("data-color-name");
+
+            let handle = (dyColor.innerText.replaceAll(" ","")+"-" + dyGender.innerText.replaceAll(" ","")+"-"  + dyName.innerText.replaceAll(" ","-")).replace("'","").toLowerCase();
+            pBtn.href = 'https://blanc.earth/products/' + handle;
+        }
+
+        // function setTee(el) {
+
+        //     let mid = el.getAttribute('data-model');
+        //     for (let i = 0; i < tmenus.length; i++) {
+        //         tmenus[i].classList.remove("active");
+        //     }
+        //     el.classList.add("active");
+        //     for (let i = ModelParent.children.length - 1; i >= 0; i--) {
+        //         ModelParent.remove(ModelParent.children[i]);
+        //     }
+        //     ModelParent.add(models[mid]);
+        // }
+
+        function cycleModel(inc) {
+
+            let ang = (Math.PI * 2) / 4 * (currmodel - 1);
+            models[currmodel].rotation.y = -ang;
+
+            // console.log( "model is " +currmodel + " ang is " + ang)
+            if (inc > 0 && currmodel > 2) {
+                currmodel = 0;
+            } else if (inc < 0 && currmodel < 1) {
+                currmodel = 3;
+            } else {
+                currmodel += inc;
+            }
+
+            targetX += inc * Math.PI / 2;
+
+            // console.log()
+            dyName.innerText = modelMap[currmodel];
+
+
+            let handle = (dyColor.innerText.replaceAll(" ","")+"-" + dyGender.innerText.replaceAll(" ","")+"-"  + dyName.innerText.replaceAll(" ","-")).replace("'","").toLowerCase();
+            pBtn.href = 'https://blanc.earth/products/' + handle;
+        }
+
+        function changeType(id) {
+            if (selectedType != id) {
+                if (id > 0) {
+                    models = wMods;
+                    dyGender.innerText = "Women's"
+                } else {
+                    models = mMods;
+                    dyGender.innerText = "Men's"
+                }
+                selectedType = id;
+
+                transitionExit = true;
+
+            }
+            changeModels();
+            let handle = (dyColor.innerText.replaceAll(" ","")+"-" + dyGender.innerText.replaceAll(" ","")+"-"  + dyName.innerText.replaceAll(" ","-")).replace("'","").toLowerCase();
+            pBtn.href = 'https://blanc.earth/products/' + handle;
 
         }
-        const tmenus = document.getElementsByClassName('tItem');
 
-        function setTee(el) {
 
-            let mid = el.getAttribute('data-model');
-            for (let i = 0; i < tmenus.length; i++) {
-                tmenus[i].classList.remove("active");
-            }
-            el.classList.add("active");
+        function changeModels() {
+            // console.log("changed")
             for (let i = ModelParent.children.length - 1; i >= 0; i--) {
                 ModelParent.remove(ModelParent.children[i]);
             }
-            ModelParent.add(models[mid]);
-        }
 
+            let incAngle = 0.0;
+            let radius = 2;
+            for (let i = 0; i < 4; i++) {
+
+                let x = radius * Math.cos(incAngle);
+                let y = radius * Math.sin(incAngle);
+                incAngle += Math.PI * 2 / 4;
+
+                models[i].position.x = x;
+                models[i].position.z = y;
+                models[i].position.y = 0;
+                models[i].rotation.y = -incAngle + Math.PI;
+
+                ModelParent.add(models[i]);
+            }
+        }
+        //   -------------------------- function exports ----------------------
         window.setColor = setColor;
-        window.setTee = setTee;
+        window.cycleModel = cycleModel;
+        // window.changeModels = changeModels;
+        window.changeType = changeType;
+
 
         function main() {
+
+
             const canvas = document.querySelector('#c');
             const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 
+            // const pr = window.devicePixelRatio;
+            // const cwidth = canvas.clientWidth * pr | 0;
             const fov = 75;
             const aspect = 2;  // the canvas default
             const near = 0.1;
-            const far = 5;
+            const far = 4;
             const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera.position.z = 1.3;
-            camera.position.y = 0.1;
+            // if( cwidth < 1000){
+            //     camera.position.z = 4;
+            // } else {
+            camera.position.z = 3.5;
+            // }
+
+            camera.position.x = -0.03;
+            camera.position.y = -0.05;
+            // camera.rotation.z = 0.3;
             const scene = new THREE.Scene();
             const color = 0xFFFFFF;
-            const intensity = 1;
+            const intensity = 2;
             const light = new THREE.DirectionalLight(color, intensity);
             light.position.set(-1, 2, 4);
+            const light2 = new THREE.DirectionalLight(color, 0.45);
+            light2.position.set(2, -1, 4);
             scene.add(light);
-
+            scene.add(light2);
 
 
             // let joggers;
 
             scene.add(ModelParent);
 
-            //          -------------------- Loading the model-------------------------------
+            //       -------------------- Loading the model-------------------------------
 
-            loader.load('./assets/all.glb', function (gltf) {
-                // joggers = gltf.scene.children[0];
-                gltf.scene.children.forEach((model, i) => {
-                    models.push(model);
-                    models[i].position.x = 0;
+            loader.load('https://cdn.shopify.com/s/files/1/0584/4005/6970/files/allc.glb', function (gltf) {
+
+                // loader.load('./assets/allc.glb', function (gltf) {
+                mMods.push(gltf.scene.getObjectByName('joggers'));
+                mMods.push(gltf.scene.getObjectByName('mtshirt'));
+                mMods.push(gltf.scene.getObjectByName('mpolo'));
+                mMods.push(gltf.scene.getObjectByName('mshorts'));
+
+                wMods.push(gltf.scene.getObjectByName('joggers'));
+                wMods.push(gltf.scene.getObjectByName('wtshirt'));
+                wMods.push(gltf.scene.getObjectByName('wpolo'));
+                wMods.push(gltf.scene.getObjectByName('wshorts'));
+
+                models = mMods;
+
+                let incAngle = 0.0;
+                let radius = 2;
+
+                for (let i = 0; i < 4; i++) {
+
+                    let x = radius * Math.cos(incAngle);
+                    let y = radius * Math.sin(incAngle);
+                    incAngle += Math.PI * 2 / 4;
+
+                    models[i].position.x = x;
+                    models[i].position.z = y;
                     models[i].position.y = 0;
-                });
-               
-                // console.log(gltf.scene.getObjectByName('joggers'));
-                console.log(models);
-               
-                models[0] = gltf.scene.getObjectByName('joggers');
-                models[4] = gltf.scene.getObjectByName('mtshirt');
-                models[5] = gltf.scene.getObjectByName('mpolo');
-                models[6] = gltf.scene.getObjectByName('mshorts');
-               
-                ModelParent.add(models[4])
+                    models[i].rotation.y = -incAngle + Math.PI;
+
+                    ModelParent.add(models[i]);
+                }
+                // ModelParent.add(models[modelID]);
 
                 render();
 
@@ -159,16 +331,57 @@
                     camera.updateProjectionMatrix();
                 }
 
-                // cubes.forEach((cube, ndx) => {
-                //     const speed = 1 + ndx * .1;
-                //     const rot = time * speed;
-                //     cube.rotation.x = rot;
-                //     cube.rotation.y = rot;
-                // });
 
-                if (ModelParent) {
-                    ModelParent.rotation.y += 0.01;
-                    ModelParent.children[0].children[0].material.color = clothCol;
+                if (ModelParent.children.length > 0) {
+
+                    //  ----------------- Transition for model switch -----------------------------
+
+                    if (transitionExit && ModelParent.position.x < 10) {
+                        ModelParent.position.x += 0.3;
+                    } else if (transitionExit && ModelParent.position.x >= 10) {
+                        transitionExit = false;
+                        ModelParent.position.x = -10;
+
+                    } else if (!transitionExit && ModelParent.position.x < -0.1) {
+                        ModelParent.position.x += 0.3;
+
+
+                    } else if (!transitionExit && ModelParent.position.x < 0) {
+                        ModelParent.position.x += 0.01;
+                    }
+
+                    // --------------------- Current model Rotation ------------------------------
+                    ModelParent.children[currmodel].rotation.y += 0.01;
+
+                    //  ------------------------ Rotate the moddel ring ------------------------
+                    if (ModelParent.rotation.y != targetX) {
+                        if (ModelParent.rotation.y < targetX && ModelParent.rotation.y + 0.05 < targetX) {
+                            ModelParent.rotation.y += 0.05;
+                        } else if (ModelParent.rotation.y > targetX && ModelParent.rotation.y + 0.05 > targetX) {
+                            ModelParent.rotation.y -= 0.05;
+                        }
+                    }
+
+                    // -------------------------- Change material color --------------------------
+                    if (ModelParent.children[1].children[0].material.color != clothCol) {
+                        for (let i = 0; i < 4; i++) {
+                            ModelParent.children[i].children[0].material.color = clothCol;
+
+                            if (clothCol.g + clothCol.b > 0.8) {
+                                ModelParent.children[i].children[1].material.color = bLabel;
+                            } else {
+                                ModelParent.children[i].children[1].material.color = wLabel;
+                            }
+
+                        }
+                        if (ModelParent.children[2].name === 'mpolo') {
+                            ModelParent.children[2].children[2].material.color = clothCol;
+                        }
+
+
+                    }
+
+
                     // joggers.children[0].children[0].material.color = jcol;
                 }
 
@@ -178,6 +391,7 @@
                     const pixelRatio = window.devicePixelRatio;
                     const width = canvas.clientWidth * pixelRatio | 0;
                     const height = canvas.clientHeight * pixelRatio | 0;
+
                     const needResize = canvas.width !== width || canvas.height !== height;
                     if (needResize) {
                         renderer.setSize(width, height, false);
